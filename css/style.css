@@ -67,6 +67,12 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01e
 .select-wrap { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--rule); background: var(--sheet); padding-left: 9px; border-radius: 6px; color: var(--muted); }
 .select-wrap select { border: 0; background: transparent; min-height: 28px; max-width: 280px; }
 .tool-sep { width: 1px; height: 20px; background: var(--rule); margin: 0 4px; }
+.btn.account { gap: 6px; max-width: 220px; margin-left: 4px; }
+.btn.account span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn.account.signed-in { border-color: var(--ok); color: var(--ok); background: var(--ok-soft); }
+.form-error { font: 13px/1.6 var(--sans); color: var(--bad); background: var(--bad-soft); padding: 8px 10px; border-radius: 6px; margin: 8px 0 0; }
+.migrate { margin: 12px 0; padding: 10px 12px; background: var(--sheet-2); border: 1px solid var(--rule); border-radius: 8px; }
+.migrate p { margin: 0 0 8px; }
 
 /* ---------- 지면 ---------- */
 .page { max-width: 1600px; margin: 0 auto; padding: 12px 20px 16px; }

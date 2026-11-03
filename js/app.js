@@ -12,9 +12,14 @@
 
   async function init() {
     RC.store.requestPersist();
-    settings = await RC.store.getSettings();
+    if (RC.cloud.configured) {
+      try { await RC.cloud.init(); } catch (e) { console.warn(e); }
+      RC.cloud.onChange(onAuthChange);
+      initAccount();
+    }
+    try { settings = await RC.store.getSettings(); } catch (e) { showError(e.message); }
     RC.api.setMailto(settings.mailto);
-    await refreshHistory();
+    try { await refreshHistory(); } catch (e) { showError(e.message); }
 
     for (const id of ['fileInput', 'fileInput2']) {
       $(id).addEventListener('change', e => { if (e.target.files[0]) analyze(e.target.files[0]); e.target.value = ''; });
@@ -32,8 +37,10 @@
     });
     $('historySelect').addEventListener('change', async e => {
       if (!e.target.value) return;
-      const r = await RC.store.getReview(+e.target.value);
-      if (r) show(r);
+      try {
+        const r = await RC.store.getReview(e.target.value); // 브라우저 저장은 숫자 id, Supabase는 uuid
+        if (r) show(r);
+      } catch (err) { showError(err.message); }
     });
     // 초록·추출 정보·메모 팝업: 하나를 열면 나머지는 닫고, 바깥을 누르면 닫는다
     const pops = [...document.querySelectorAll('details.pop')];
@@ -44,7 +51,7 @@
       if (!current) return;
       current.memo = $('memo').value;
       clearTimeout(memoTimer);
-      memoTimer = setTimeout(() => RC.store.putReview(current), 400);
+      memoTimer = setTimeout(() => RC.store.putReview(current).catch(e => showError('메모 저장 실패: ' + e.message)), 400);
     });
     $('exportBtn').addEventListener('click', () => current && RC.exporter.toXlsx(current, { threshold: settings.threshold, similarRows: filteredSimilar(current) }));
     $('backupBtn').addEventListener('click', backup);
@@ -301,9 +308,78 @@
     settings.threshold = Math.min(100, Math.max(1, +$('setThreshold').value || 40));
     settings.similarCount = Math.min(50, Math.max(10, +$('setCount').value || 20));
     settings.mailto = $('setMailto').value.trim();
-    for (const k of ['threshold', 'similarCount', 'mailto']) await RC.store.setSetting(k, settings[k]);
+    try { await RC.store.saveSettings(settings); } catch (e) { showError('설정 저장 실패: ' + e.message); }
     RC.api.setMailto(settings.mailto);
     if (current) renderDup(current);
+  }
+
+  // ---------------- Supabase 계정 ----------------
+  function initAccount() {
+    $('accountBtn').hidden = false;
+    renderAccount();
+    $('accountBtn').addEventListener('click', openAccount);
+    $('accountDlg').querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => $('accountDlg').close()));
+    $('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      $('loginError').hidden = true;
+      $('loginSubmit').disabled = true;
+      try {
+        await RC.cloud.signIn($('loginEmail').value.trim(), $('loginPassword').value);
+        $('loginPassword').value = '';
+        await onAuthChange(RC.cloud.user());
+        openAccount();
+      } catch (err) {
+        $('loginError').textContent = err.message; $('loginError').hidden = false;
+      } finally { $('loginSubmit').disabled = false; }
+    });
+    $('logoutBtn').addEventListener('click', async () => { await RC.cloud.signOut(); await onAuthChange(null); $('accountDlg').close(); });
+    $('migrateBtn').addEventListener('click', migrate);
+  }
+
+  function renderAccount() {
+    const u = RC.cloud.user();
+    $('accountLabel').textContent = u ? u.email : '로그인';
+    $('accountBtn').classList.toggle('signed-in', !!u);
+    $('accountBtn').title = u ? 'Supabase에 저장 중 · ' + u.email : '로그인하면 Supabase에 저장합니다';
+  }
+
+  async function openAccount() {
+    const u = RC.cloud.user();
+    $('loginForm').hidden = !!u;
+    $('accountPanel').hidden = !u;
+    if (u) {
+      $('accountEmail').textContent = u.email;
+      const n = await RC.store.localCount();
+      $('migrateBox').hidden = n === 0;
+      $('migrateText').textContent = '이 브라우저에만 저장된 검토가 ' + n + '건 있습니다. Supabase로 옮기면 다른 곳에서도 볼 수 있습니다 (이미 올린 검토는 건너뜁니다. 브라우저의 원본은 그대로 남습니다).';
+    }
+    if (!$('accountDlg').open) $('accountDlg').showModal();
+  }
+
+  async function migrate() {
+    $('migrateBtn').disabled = true;
+    try {
+      const n = await RC.store.migrateLocalToCloud((d, t) => { $('migrateText').textContent = 'Supabase로 옮기는 중… ' + d + '/' + t; });
+      $('migrateText').textContent = n ? n + '건을 Supabase로 옮겼습니다.' : '옮길 검토가 없습니다 (모두 이미 Supabase에 있습니다).';
+      await refreshHistory(current && current.id);
+    } catch (e) {
+      $('migrateText').textContent = '옮기기 실패: ' + e.message;
+    } finally { $('migrateBtn').disabled = false; }
+  }
+
+  // 로그인 상태가 바뀌면 저장 위치가 바뀌므로 설정·이력을 다시 읽고, 보던 검토는 닫는다
+  async function onAuthChange() {
+    renderAccount();
+    current = null;
+    $('result').hidden = true;
+    $('empty').hidden = false;
+    $('exportBtn').disabled = true;
+    hideError();
+    try {
+      settings = await RC.store.getSettings();
+      RC.api.setMailto(settings.mailto);
+      await refreshHistory();
+    } catch (e) { showError(e.message); }
   }
 
   function progress(text, p) {

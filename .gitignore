@@ -1,2 +1,12 @@
 # 샘플 논문 PDF는 저작권이 출판사·저자에게 있어 저장소에 올리지 않는다
 tests/samples/*.pdf
+
+# 로컬 환경 변수 (Supabase 주소·키 등)
+.env
+.env.local
+.env.*.local
+js/config.local.js
+
+# Vercel 빌드 결과물
+dist/
+.vercel/

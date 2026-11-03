@@ -20,6 +20,34 @@
 - **초록 · 추출 정보 · 메모:** 원고 제목 오른쪽의 세 버튼입니다. 추출 정보에서는 뽑아낸 키워드와 참고문헌 원문 블록을 볼 수 있어서, 참고문헌 개수가 맞는지 확인할 수 있습니다. 메모는 입력하는 대로 저장됩니다.
 - **이력 백업:** 검토 이력은 브라우저 안에 저장됩니다. 브라우저의 "인터넷 사용 기록 삭제"에서 사이트 데이터까지 지우면 이력도 함께 지워집니다. 가끔 백업해 두세요.
 
+## Supabase 저장 (선택)
+
+설정하지 않으면 검토 이력은 이 브라우저(IndexedDB)에만 저장됩니다. Supabase에 연결하면 로그인한 계정으로 저장되어 다른 PC나 브라우저에서도 볼 수 있습니다.
+
+1. **테이블 만들기:** Supabase 대시보드 → SQL Editor에서 [`supabase/schema.sql`](supabase/schema.sql)을 실행합니다. 테이블 3개(`reviews`, `review_references`, `user_settings`)가 생기고, 로그인한 본인 행만 다룰 수 있도록 RLS가 켜집니다. 로그인하지 않은 요청(anon)에는 권한이 없습니다.
+2. **계정 만들기:** Authentication → Users → **Add user**에서 이메일과 비밀번호로 계정을 만듭니다("Auto Confirm User" 체크). 혼자 쓴다면 Authentication → Sign In / Providers에서 **Allow new users to sign up**을 꺼 두세요.
+3. **주소·키 넣기:** 프로젝트 폴더의 `.env.local`에 아래 두 줄을 넣고, 설정 파일을 만듭니다.
+   ```
+   SUPABASE_URL=https://<프로젝트>.supabase.co
+   SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+   ```
+   ```bash
+   powershell -ExecutionPolicy Bypass -File tools\make-config.ps1
+   ```
+   브라우저에서 바로 여는 앱은 `.env.local`을 읽을 수 없어서, 이 스크립트가 값을 `js/config.local.js`로 옮겨 줍니다. 두 파일 모두 `.gitignore`에 있어 저장소에 올라가지 않습니다.
+4. **로그인:** `RefCheck.html`을 열면 오른쪽 위에 **로그인** 버튼이 생깁니다. 로그인하면 버튼이 초록색으로 바뀌고 이메일이 표시됩니다. 이때부터 새 검토, 메모, 설정이 Supabase에 저장됩니다.
+5. **기존 이력 옮기기:** 로그인한 뒤 계정 버튼을 누르면, 이 브라우저에만 있던 검토를 **Supabase로 옮기기**로 올릴 수 있습니다. 이미 올린 검토는 건너뛰고, 브라우저에 있던 원본은 그대로 남습니다.
+
+API 응답 캐시(CrossRef·OpenAlex)는 공개 데이터라 로그인 여부와 관계없이 브라우저에만 저장합니다.
+
+## Vercel 배포
+
+저장소를 Vercel에 가져오면(Import) [`vercel.json`](vercel.json) 설정대로 빌드됩니다. 빌드 스크립트 [`tools/vercel-build.sh`](tools/vercel-build.sh)가 앱 파일을 `dist/`로 복사하고, `RefCheck.html`을 첫 화면(`index.html`)으로 둡니다.
+
+- Vercel 프로젝트 → Settings → **Environment Variables**에 `SUPABASE_URL`과 `SUPABASE_PUBLISHABLE_KEY`를 넣으면, 빌드할 때 `js/config.local.js`를 만들어 Supabase 로그인을 켭니다. 값을 넣거나 바꾼 뒤에는 다시 배포(Redeploy)해야 반영됩니다.
+- 두 값이 없으면 Supabase 없이 브라우저 저장만으로 동작합니다.
+- 검토 이력(브라우저 저장)은 사이트 주소마다 따로 생깁니다. 파일로 열 때의 이력은 Vercel 주소에서 보이지 않으니, 로그인 후 "Supabase로 옮기기"나 백업·복원으로 옮기세요.
+
 ## 판정 기준
 
 | 화면 | 기준 |
@@ -44,10 +72,14 @@ js/api.js            CrossRef / OpenAlex 호출, 동시 요청 제한, 캐시
 js/ref-verify.js     기능 2: O/X 판정
 js/similar.js        기능 3: 유사 주제 검색
 js/duplicate.js      기능 1: 중복성
-js/store.js          IndexedDB 저장, 백업/복원
+js/store.js          저장소 선택(로그인 시 Supabase, 아니면 IndexedDB), 백업/복원, 이력 옮기기
+js/cloud.js          Supabase 로그인과 테이블 읽기·쓰기
+js/config.local.js   Supabase 주소·키 (tools/make-config.ps1 이 생성, 저장소 제외)
+supabase/schema.sql  Supabase 테이블·RLS·권한
+tools/make-config.ps1 .env.local → js/config.local.js
 js/export.js         Excel 내보내기
 js/app.js            화면
-lib/                 pdf.js 3.11.174, SheetJS 0.18.5 (cdnjs에서 받은 사본)
+lib/                 pdf.js 3.11.174, SheetJS 0.18.5 (cdnjs), supabase-js 2.45.4 (jsDelivr) 사본
 tests/test.html      자동 점검 (브라우저로 열면 실행)
 ```
 

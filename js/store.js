@@ -42,10 +42,31 @@ RC.store = (function () {
     return false;
   }
 
-  const putReview = r => tx('reviews', 'readwrite', s => s.put(r));
-  const getReview = id => tx('reviews', 'readonly', s => s.get(id));
-  const allReviews = () => tx('reviews', 'readonly', s => s.getAll());
-  const deleteReview = id => tx('reviews', 'readwrite', s => s.delete(id));
+  // 검토 이력: Supabase에 로그인해 있으면 Supabase, 아니면 이 브라우저(IndexedDB)
+  const cloudOn = () => !!(RC.cloud && RC.cloud.active());
+  const localPut = r => tx('reviews', 'readwrite', s => s.put(r));
+  const localAll = () => tx('reviews', 'readonly', s => s.getAll());
+  const putReview = r => cloudOn() ? RC.cloud.putReview(r) : localPut(r);
+  const getReview = id => cloudOn() ? RC.cloud.getReview(id) : tx('reviews', 'readonly', s => s.get(Number(id)));
+  const allReviews = () => cloudOn() ? RC.cloud.allReviews() : localAll();
+  const deleteReview = id => cloudOn() ? RC.cloud.deleteReview(id) : tx('reviews', 'readwrite', s => s.delete(Number(id)));
+  // 같은 검토인지: 파일 해시 + 검토 시각 (시각은 저장 형식이 달라도 같게 비교)
+  const sameKey = r => r.fileHash + '|' + Date.parse(r.createdAt);
+
+  // 이 브라우저에 저장된 검토 중 Supabase에 없는 것을 올린다. 올린 개수를 돌려준다.
+  async function migrateLocalToCloud(onProgress) {
+    if (!cloudOn()) throw new Error('먼저 Supabase에 로그인해 주세요.');
+    const have = new Set((await RC.cloud.allReviews()).map(sameKey));
+    const todo = (await localAll()).filter(r => !have.has(sameKey(r)));
+    let n = 0;
+    for (const r of todo) {
+      const copy = Object.assign({}, r); delete copy.id;
+      await RC.cloud.putReview(copy);
+      n++; if (onProgress) onProgress(n, todo.length);
+    }
+    return n;
+  }
+  const localCount = async () => (await localAll()).length;
 
   async function cacheGet(key) {
     try {
@@ -58,34 +79,42 @@ RC.store = (function () {
     try { await tx('apiCache', 'readwrite', s => s.put({ key, response, fetchedAt: Date.now() })); } catch (e) { }
   }
 
+  // 설정: 이 브라우저에 늘 저장하고, 로그인해 있으면 Supabase 값을 우선한다
   async function getSettings() {
     const rows = await tx('settings', 'readonly', s => s.getAll());
     const out = { threshold: 40, mailto: '', similarCount: 20 };
     for (const r of rows || []) out[r.key] = r.value;
+    if (cloudOn()) Object.assign(out, await RC.cloud.getSettings() || {});
     return out;
   }
   async function setSetting(key, value) {
     await tx('settings', 'readwrite', s => s.put({ key, value }));
   }
+  async function saveSettings(s) {
+    for (const k of ['threshold', 'mailto', 'similarCount']) await setSetting(k, s[k]);
+    if (cloudOn()) await RC.cloud.saveSettings(s);
+  }
 
   // 백업: 검토 이력과 설정만 (API 캐시는 다시 받으면 되므로 뺀다)
   async function exportBackup() {
-    return JSON.stringify({ app: 'RefCheck', version: 1, exportedAt: new Date().toISOString(), settings: await getSettings(), reviews: await allReviews() });
+    const reviews = cloudOn() ? await RC.cloud.allReviewsFull() : await localAll();
+    return JSON.stringify({ app: 'RefCheck', version: 1, exportedAt: new Date().toISOString(), settings: await getSettings(), reviews });
   }
   // 복원: 이미 있는 검토(같은 파일 해시 + 같은 검토 시각)는 건너뛴다. 추가된 개수를 돌려준다.
   async function importBackup(json) {
     const data = JSON.parse(json);
     if (data.app !== 'RefCheck' || !Array.isArray(data.reviews)) throw new Error('RefCheck 백업 파일이 아닙니다.');
-    const have = new Set((await allReviews()).map(r => r.fileHash + '|' + r.createdAt));
+    const have = new Set((await allReviews()).map(sameKey));
     let added = 0;
     for (const r of data.reviews) {
-      if (have.has(r.fileHash + '|' + r.createdAt)) continue;
+      if (have.has(sameKey(r))) continue;
       const copy = Object.assign({}, r); delete copy.id;
       await putReview(copy); added++;
     }
-    for (const k of ['threshold', 'mailto', 'similarCount']) if (data.settings && data.settings[k] !== undefined) await setSetting(k, data.settings[k]);
+    if (data.settings) await saveSettings(Object.assign(await getSettings(), data.settings));
     return added;
   }
 
-  return { requestPersist, putReview, getReview, allReviews, deleteReview, cacheGet, cacheSet, getSettings, setSetting, exportBackup, importBackup };
+  return { requestPersist, putReview, getReview, allReviews, deleteReview, cacheGet, cacheSet, getSettings, setSetting, saveSettings,
+    exportBackup, importBackup, migrateLocalToCloud, localCount };
 })();
