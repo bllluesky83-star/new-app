@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RefCheck 자동 점검</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<main style="display:block">
+  <h2>RefCheck 자동 점검</h2>
+  <p class="muted">참고문헌 분리·유사도 계산 단위 점검과, 일부러 틀리게 쓴 가짜 참고문헌 3건이 X로 잡히는지 실제 API로 확인합니다. (인터넷 필요)</p>
+  <p id="summary"><b>실행 중…</b></p>
+  <div class="table-wrap"><table><thead><tr><th>결과</th><th>점검 항목</th><th>내용</th></tr></thead><tbody id="rows"></tbody></table></div>
+</main>
+<script src="../lib/pdf.min.js"></script>
+<script src="../lib/pdf.worker.min.js"></script>
+<script src="../js/text.js"></script>
+<script src="../js/store.js"></script>
+<script src="../js/pdf-extract.js"></script>
+<script src="../js/refs-parse.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/ref-verify.js"></script>
+<script>
+// 글자 한 줄짜리 PDF를 직접 만든다 (외부 파일 없이 pdf.js 동작 확인용)
+function makePdf(text) {
+  const stream = 'BT /F1 18 Tf 72 720 Td (' + text + ') Tj ET';
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',
+    '<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'];
+  let out = '%PDF-1.4\n';
+  const offs = [];
+  objs.forEach((o, i) => { offs.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
+  const xref = out.length;
+  out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');
+  out += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+  return new TextEncoder().encode(out);
+}
+(async function () {
+  const results = [];
+  const add = (ok, name, detail) => {
+    results.push(ok);
+    document.getElementById('rows').insertAdjacentHTML('beforeend',
+      `<tr class="${ok ? 'O' : 'X'}"><td class="verdict">${ok ? '통과' : '실패'}</td><td>${RC.text.esc(name)}</td><td class="raw">${RC.text.esc(detail)}</td></tr>`);
+  };
+  const line = (text, x) => ({ text, x: x || 50, page: 1, col: 0 });
+
+  // ---- 환경 점검: pdf.js 읽기, 브라우저 저장소 (파일을 직접 열었을 때도 되는지) ----
+  try {
+    const pdf = makePdf('Hello RefCheck PDF test line');
+    const docp = await pdfjsLib.getDocument({ data: pdf }).promise;
+    const tc = await (await docp.getPage(1)).getTextContent();
+    add(tc.items.map(i => i.str).join('').includes('Hello RefCheck'), 'pdf.js로 PDF 글자 읽기', location.protocol);
+  } catch (e) { add(false, 'pdf.js로 PDF 글자 읽기', e.message); }
+  try {
+    await RC.store.setSetting('_selftest', 1);
+    add((await RC.store.getSettings())._selftest === 1, '브라우저 저장소(IndexedDB) 쓰기·읽기', location.protocol);
+  } catch (e) { add(false, '브라우저 저장소(IndexedDB) 쓰기·읽기', e.message); }
+
+  // ---- 단위 점검: 참고문헌 분리 ----
+  const ieee = [
+    '[1] K. He, X. Zhang, S. Ren, and J. Sun, "Deep residual learning for', 'image recognition," in Proc. CVPR, 2016, pp. 770–778.',
+    '[2] D. P. Kingma and J. Ba, "Adam: A method for stochastic', 'optimization," in Proc. ICLR, 2015.',
+    '[3] A. Vaswani et al., "Attention is all you need," in Proc. NeurIPS,', '2017, pp. 5998–6008.'
+  ].map(t => line(t));
+  let p = RC.refs.parse(ieee);
+  add(p.style === 'bracket' && p.entries.length === 3, 'IEEE [n] 형식 3건 분리', p.style + ' / ' + p.entries.length + '건');
+  add(p.entries[0].year === 2016 && p.entries[0].firstAuthor === 'he' && /deep residual learning/i.test(p.entries[0].titleGuess),
+    'IEEE 항목 필드 추출', JSON.stringify({ y: p.entries[0].year, a: p.entries[0].firstAuthor, t: p.entries[0].titleGuess }));
+
+  const apa = [
+    line('Lowe, D. G. (2004). Distinctive image features from scale-invariant', 50), line('keypoints. International Journal of Computer Vision, 60(2), 91–110.', 62),
+    line('Rublee, E., Rabaud, V., Konolige, K., & Bradski, G. (2011). ORB: An', 50), line('efficient alternative to SIFT or SURF. In ICCV (pp. 2564–2571).', 62),
+    line('Wang, Z., Bovik, A. C., Sheikh, H. R., & Simoncelli, E. P. (2004).', 50), line('Image quality assessment: From error visibility to structural', 62), line('similarity. IEEE TIP, 13(4), 600–612.', 62)
+  ];
+  p = RC.refs.parse(apa);
+  add(p.style === 'author-year' && p.entries.length === 3, 'APA 저자-연도형(내어쓰기) 3건 분리', p.style + ' / ' + p.entries.length + '건');
+  add(p.entries[0].year === 2004 && p.entries[0].firstAuthor === 'lowe' && /^Distinctive image features/.test(p.entries[0].titleGuess),
+    'APA 항목 필드 추출', JSON.stringify({ y: p.entries[0].year, a: p.entries[0].firstAuthor, t: p.entries[0].titleGuess }));
+
+  const kor = [line('1. Alcantarilla, P. F. and Solutions, T., 2011, Fast'), line('explicit diffusion for accelerated features, IEEE TPAMI.', 62),
+    line('2. Dong, X., Pang, Y. and Wen, J., 2010, Fast efficient algorithm for'), line('enhancement of low lighting video, Proc. of ICME 2011, pp. 1-6.', 62)];
+  p = RC.refs.parse(kor);
+  add(p.entries.length === 2 && p.entries[1].year === 2010, '"성, 이니셜., 연도," 형식: 저자 바로 뒤 연도 사용', p.entries.map(e => e.year).join(', '));
+
+  // ---- 단위 점검: 유사도 ----
+  const doc = 'We propose a learnable image enhancement filtering model for multispectral object detection in low-light conditions.';
+  const sims = RC.text.similarities(doc, [doc, 'Protein folding prediction with graph networks.']);
+  add(Math.abs(sims[0] - 1) < 1e-9 && sims[1] < 0.05, 'TF-IDF: 같은 글 100%, 무관한 글 ~0%', sims.map(s => Math.round(s * 100) + '%').join(' / '));
+  const ov = RC.text.overlaps(doc, 'In this work a learnable image enhancement filtering model for detection is shown.', 5);
+  add(ov.phrases.length === 1 && /learnable image enhancement filtering model for/.test(ov.phrases[0]), '겹치는 구절(단어 5개 이상 연속) 찾기', ov.phrases.join(' | '));
+  add(RC.text.titleScore('Cross-Modality Fusion Transformer for Multispectral Object Detection', 'Crossmodality fusion transformer for multispectral object detection', '') >= 85,
+    '제목 비교: 줄 끝 하이픈이 지워진 경우도 일치', '');
+
+  // ---- 실제 API: 가짜 참고문헌 3건은 X, 진짜 2건은 O ----
+  const cases = [
+    { fake: true, name: '가짜①: 존재하지 않는 논문', raw: 'J. Doe and A. Roe, "Quantum lattice embeddings for hyperbolic sentiment calibration in maritime drones," IEEE Trans. Neural Netw. Learn. Syst., vol. 31, no. 4, pp. 1201–1214, 2018.' },
+    { fake: true, name: '가짜②: 실제 논문, 연도를 틀리게 (2016→2012)', raw: 'K. He, X. Zhang, S. Ren, and J. Sun, "Deep residual learning for image recognition," in Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR), 2012, pp. 770–778.' },
+    { fake: true, name: '가짜③: 실제 논문, 제1저자를 틀리게 (Lowe→Smith)', raw: 'D. G. Smith, "Distinctive image features from scale-invariant keypoints," Int. J. Comput. Vis., vol. 60, no. 2, pp. 91–110, 2004.' },
+    { fake: false, name: '진짜①', raw: 'K. He, X. Zhang, S. Ren, and J. Sun, "Deep residual learning for image recognition," in Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR), 2016, pp. 770–778.' },
+    { fake: false, name: '진짜②', raw: 'D. G. Lowe, "Distinctive image features from scale-invariant keypoints," Int. J. Comput. Vis., vol. 60, no. 2, pp. 91–110, 2004.' }
+  ];
+  const entries = cases.map((c, i) => Object.assign({ idx: i + 1, raw: c.raw }, RC.refs.fields(c.raw)));
+  const verdicts = await RC.verify.verifyAll(entries);
+  verdicts.forEach((v, i) => {
+    const c = cases[i];
+    add(c.fake ? v.verdict === 'X' : v.verdict === 'O', c.name + ' → ' + (c.fake ? 'X' : 'O') + ' 기대', v.verdict + ' · ' + (v.reason || '(사유 없음)') + (v.candidate ? ' · 찾은 논문: ' + v.candidate.title + ' (' + v.candidate.year + ')' : ''));
+  });
+
+  const pass = results.filter(Boolean).length;
+  document.getElementById('summary').innerHTML = `<b>${pass}/${results.length} 통과</b>`;
+  document.title = 'DONE ' + pass + '/' + results.length;
+  window.testResult = { pass, total: results.length };
+})();
+</script>
+</body>
+</html>

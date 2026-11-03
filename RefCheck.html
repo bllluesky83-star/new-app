@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RefCheck 논문 검토 도우미</title>
+<link rel="icon" type="image/svg+xml" href="img/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- 선 아이콘 모음: <svg class="ic"><use href="#i-이름"/></svg> 로 쓴다. 색은 글자색(currentColor)을 따른다. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-pdf" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6M9.5 13.5 12 11l2.5 2.5"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="1"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4 15.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3.5"/></symbol>
+    <symbol id="i-restore" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 3.5v4.5h4.5"/><path d="M10 9.5h4.5v6H10z"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+    <symbol id="i-overlap" viewBox="0 0 24 24"><circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5c3-1 5.5-.8 8 .8v13c-2.5-1.6-5-1.8-8-.8z"/><path d="M20 5.5c-3-1-5.5-.8-8 .8v13c2.5-1.6 5-1.8 8-.8z"/></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="12" cy="17.5" r="2.2"/><circle cx="19" cy="15" r="1.6"/><path d="M8 8l2.8 7.5M16.2 7.2l-3.2 8.4M8.2 6.8l7.6-.6M14.2 17l3.3-1.4"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h14v11l-5 5H5z"/><path d="M14 20v-5h5M8.5 9h7M8.5 12.5h4"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.4"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.2l2.5 2.5 4.9-5.2"/></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+    <symbol id="i-question" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.8 9.5a2.3 2.3 0 1 1 3.2 2.1c-.7.3-1 .8-1 1.5v.4M12 16.3v.4"/></symbol>
+  </defs>
+</svg>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <img class="logo" src="img/logo.svg" alt="" width="28" height="28">
+      <span class="brand-name">RefCheck</span>
+      <span class="brand-sub">Manuscript Review Assistant · 논문 검토 도우미</span>
+    </div>
+    <nav class="actions" aria-label="도구">
+      <span class="select-wrap" title="검토 이력"><svg class="ic"><use href="#i-history"/></svg><select id="historySelect" aria-label="검토 이력"><option value="">검토 이력</option></select></span>
+      <span class="tool-sep" aria-hidden="true"></span>
+      <label class="btn icon primary" data-tip="원고 PDF 업로드" tabindex="0"><svg class="ic"><use href="#i-pdf"/></svg><span class="sr">원고 PDF 업로드</span><input type="file" id="fileInput" accept="application/pdf" hidden></label>
+      <button id="exportBtn" class="btn icon" data-tip="Excel 내보내기" disabled><svg class="ic"><use href="#i-table"/></svg><span class="sr">Excel 내보내기</span></button>
+      <button id="backupBtn" class="btn icon ghost" data-tip="이력 백업 (JSON 저장)"><svg class="ic"><use href="#i-archive"/></svg><span class="sr">이력 백업</span></button>
+      <label class="btn icon ghost" data-tip="백업에서 복원" tabindex="0"><svg class="ic"><use href="#i-restore"/></svg><span class="sr">백업에서 복원</span><input type="file" id="restoreInput" accept="application/json,.json" hidden></label>
+      <button id="settingsBtn" class="btn icon ghost" data-tip="설정"><svg class="ic"><use href="#i-settings"/></svg><span class="sr">설정</span></button>
+    </nav>
+  </div>
+</header>
+
+<div class="page">
+  <section id="progress" class="progress" hidden>
+    <div class="progress-text" id="progressText"></div>
+    <div class="bar"><div id="progressBar"></div></div>
+  </section>
+  <div id="error" class="error" hidden></div>
+
+  <section id="empty" class="empty">
+    <p class="kicker">Review Report</p>
+    <h1>투고 원고 1차 검토</h1>
+    <p class="lede">원고 PDF 한 편을 올리면 참고문헌의 실재 여부, 기존 연구와의 중복 정도, 최근 유사 연구를 한 번에 정리합니다.</p>
+    <label class="dropzone" for="fileInput2">
+      <input type="file" id="fileInput2" accept="application/pdf" hidden>
+      <span class="dz-title">원고 PDF를 여기에 끌어다 놓거나 눌러서 고르세요</span>
+      <span class="dz-note">텍스트 기반 PDF만 지원합니다 (스캔 이미지 PDF 불가)</span>
+    </label>
+    <ol class="contents">
+      <li><span class="num">I.</span><span><b>중복성 검토</b> 외부 논문 초록, 그리고 이전에 검토한 투고 원고와의 유사도</span></li>
+      <li><span class="num">II.</span><span><b>참고문헌 검증</b> CrossRef·OpenAlex 대조로 존재 여부와 저자·연도 일치 판정</span></li>
+      <li><span class="num">III.</span><span><b>유사 주제 연구</b> 비슷한 주제의 논문 목록 (최신순)</span></li>
+    </ol>
+    <p class="footnote">검토 결과는 이 브라우저에 자동 저장되며, 상단의 "검토 이력"에서 다시 열 수 있습니다.</p>
+  </section>
+
+  <!-- 결과: 원고 표제부 한 줄 + 세 영역을 한 화면에 나란히. 각 영역은 안에서만 스크롤된다 -->
+  <main id="result" hidden>
+    <article class="manuscript">
+      <div id="manuscript"></div>
+      <div class="ms-tools">
+        <details class="pop" id="abstractPop"><summary>초록</summary><div class="pop-body" id="abstractBody"></div></details>
+        <details class="pop" id="extractInfo"><summary>추출 정보</summary><div class="pop-body" id="extractBody"></div></details>
+        <details class="pop"><summary>메모</summary><div class="pop-body"><textarea id="memo" rows="5" placeholder="자유롭게 적으세요. 입력하는 대로 저장됩니다."></textarea></div></details>
+      </div>
+    </article>
+
+    <div class="board">
+      <section class="panel" aria-labelledby="h-dup">
+        <h2 id="h-dup"><span class="num">I.</span>중복성 검토</h2>
+        <div class="panel-body" id="tab-dup"></div>
+      </section>
+      <section class="panel" aria-labelledby="h-ref">
+        <h2 id="h-ref"><span class="num">II.</span>참고문헌 검증</h2>
+        <div class="panel-body" id="tab-ref"></div>
+      </section>
+      <section class="panel" aria-labelledby="h-sim">
+        <h2 id="h-sim"><span class="num">III.</span>유사 주제 연구</h2>
+        <div class="panel-body" id="tab-sim"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="colophon">외부 조회: CrossRef, OpenAlex · 1차 걸러내기 용도이며 공식 표절 검사(iThenticate, KCI 문헌유사도 검사)를 대신하지 않습니다.</footer>
+</div>
+
+<dialog id="settingsDlg">
+  <form method="dialog">
+    <h3>설정</h3>
+    <label>중복성 "주의" 기준값 (%)<input type="number" id="setThreshold" min="1" max="100"></label>
+    <label>유사 논문 수<input type="number" id="setCount" min="10" max="50"></label>
+    <label>API 연락용 이메일 (선택)<input type="email" id="setMailto" placeholder="비워 두어도 동작합니다"></label>
+    <p class="footnote">이메일을 넣으면 CrossRef·OpenAlex 요청에 붙여 보냅니다. 두 곳 모두 이메일이 붙은 요청을 더 안정적인 서버로 처리하고, CrossRef는 동시 조회 수를 늘려 줍니다.</p>
+    <div class="dialog-actions"><button value="cancel" class="btn ghost">취소</button><button value="ok" class="btn primary" id="settingsSave">저장</button></div>
+  </form>
+</dialog>
+
+<script src="lib/pdf.min.js"></script>
+<script src="lib/pdf.worker.min.js"></script>
+<script src="lib/xlsx.full.min.js"></script>
+<script src="js/text.js"></script>
+<script src="js/store.js"></script>
+<script src="js/pdf-extract.js"></script>
+<script src="js/refs-parse.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ref-verify.js"></script>
+<script src="js/similar.js"></script>
+<script src="js/duplicate.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
