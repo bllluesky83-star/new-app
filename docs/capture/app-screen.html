@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ko"><head><base href="http://localhost:8765/">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RefCheck 논문 검토 도우미</title>
+<link rel="icon" type="image/svg+xml" href="img/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- 선 아이콘 모음: <svg class="ic"><use href="#i-이름"/></svg> 로 쓴다. 색은 글자색(currentColor)을 따른다. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-pdf" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path><path d="M12 17v-6M9.5 13.5 12 11l2.5 2.5"></path></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"></path><path d="M3 4v4h4"></path><path d="M12 7.5V12l3 2"></path></symbol>
+    <symbol id="i-table" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="1"></rect><path d="M3.5 9.5h17M3.5 14.5h17M9.5 9.5v10"></path></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"></path><path d="M4 15.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3.5"></path></symbol>
+    <symbol id="i-restore" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"></path><path d="M4 3.5v4.5h4.5"></path><path d="M10 9.5h4.5v6H10z"></path></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="17" r="2"></circle></symbol>
+    <symbol id="i-overlap" viewBox="0 0 24 24"><circle cx="9" cy="12" r="5.5"></circle><circle cx="15" cy="12" r="5.5"></circle></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5c3-1 5.5-.8 8 .8v13c-2.5-1.6-5-1.8-8-.8z"></path><path d="M20 5.5c-3-1-5.5-.8-8 .8v13c2.5-1.6 5-1.8 8-.8z"></path></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"></circle><circle cx="18" cy="6" r="2.2"></circle><circle cx="12" cy="17.5" r="2.2"></circle><circle cx="19" cy="15" r="1.6"></circle><path d="M8 8l2.8 7.5M16.2 7.2l-3.2 8.4M8.2 6.8l7.6-.6M14.2 17l3.3-1.4"></path></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h14v11l-5 5H5z"></path><path d="M14 20v-5h5M8.5 9h7M8.5 12.5h4"></path></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 11v5.5M12 7.8v.4"></path></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5"></path><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"></circle><path d="M5 19.5c1.2-3.4 3.8-5 7-5s5.8 1.6 7 5"></path></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7 9.5a4.5 4.5 0 0 0 0 9z"></path></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.3 12.2l2.5 2.5 4.9-5.2"></path></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M9 9l6 6M15 9l-6 6"></path></symbol>
+    <symbol id="i-question" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"></circle><path d="M9.8 9.5a2.3 2.3 0 1 1 3.2 2.1c-.7.3-1 .8-1 1.5v.4M12 16.3v.4"></path></symbol>
+  </defs>
+</svg>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">
+      <img class="logo" src="img/logo.svg" alt="" width="28" height="28">
+      <span class="brand-name">RefCheck</span>
+      <span class="brand-sub">Manuscript Review Assistant · 논문 검토 도우미</span>
+    </div>
+    <nav class="actions" aria-label="도구">
+      <span class="select-wrap" title="검토 이력"><svg class="ic"><use href="#i-history"></use></svg><select id="historySelect" aria-label="검토 이력"><option selected="">2026-11-04 10:50 · 야간 영상 기반 보행자 검출을 위한 저조도…</option></select></span>
+      <span class="tool-sep" aria-hidden="true"></span>
+      <label class="btn icon primary" data-tip="원고 PDF 업로드" tabindex="0"><svg class="ic"><use href="#i-pdf"></use></svg><span class="sr">원고 PDF 업로드</span><input type="file" id="fileInput" accept="application/pdf" hidden=""></label>
+      <button id="exportBtn" class="btn icon" data-tip="Excel 내보내기"><svg class="ic"><use href="#i-table"></use></svg><span class="sr">Excel 내보내기</span></button>
+      <button id="backupBtn" class="btn icon ghost" data-tip="이력 백업 (JSON 저장)"><svg class="ic"><use href="#i-archive"></use></svg><span class="sr">이력 백업</span></button>
+      <label class="btn icon ghost" data-tip="백업에서 복원" tabindex="0"><svg class="ic"><use href="#i-restore"></use></svg><span class="sr">백업에서 복원</span><input type="file" id="restoreInput" accept="application/json,.json" hidden=""></label>
+      <button id="settingsBtn" class="btn icon ghost" data-tip="설정"><svg class="ic"><use href="#i-settings"></use></svg><span class="sr">설정</span></button>
+      <button id="accountBtn" class="btn account" title="로그인하면 Supabase에 저장합니다"><svg class="ic"><use href="#i-user"></use></svg><span id="accountLabel">로그인</span></button>
+    </nav>
+  </div>
+</header>
+
+<div class="page">
+  <section id="progress" class="progress" hidden="">
+    <div class="progress-text" id="progressText"></div>
+    <div class="bar"><div id="progressBar"></div></div>
+  </section>
+  <div id="error" class="error" hidden=""></div>
+
+  <section id="empty" class="empty" hidden="">
+    <p class="kicker">Review Report</p>
+    <h1>연구결과 검토</h1>
+    <p class="lede">원고 PDF 한 편을 올리면 참고문헌의 실재 여부, 기존 연구와의 중복 정도, 최근 유사 연구를 한 번에 정리합니다.</p>
+    <label class="dropzone" for="fileInput2">
+      <input type="file" id="fileInput2" accept="application/pdf" hidden="">
+      <span class="dz-title">원고 PDF를 여기에 끌어다 놓거나 눌러서 고르세요</span>
+      <span class="dz-note">텍스트 기반 PDF만 지원합니다 (스캔 이미지 PDF 불가)</span>
+    </label>
+    <ol class="contents">
+      <li><span class="num">I.</span><span><b>중복성 검토</b> 외부 논문 초록, 그리고 이전에 검토한 투고 원고와의 유사도</span></li>
+      <li><span class="num">II.</span><span><b>참고문헌 검증</b> CrossRef·OpenAlex 대조로 존재 여부와 저자·연도 일치 판정</span></li>
+      <li><span class="num">III.</span><span><b>유사 주제 연구</b> 비슷한 주제의 논문 목록 (최신순)</span></li>
+    </ol>
+    <p class="footnote">검토 결과는 이 브라우저에 자동 저장되며, 상단의 "검토 이력"에서 다시 열 수 있습니다.</p>
+  </section>
+
+  <!-- 결과: 원고 표제부 한 줄 + 세 영역을 한 화면에 나란히. 각 영역은 안에서만 스크롤된다 -->
+  <main id="result">
+    <article class="manuscript">
+      <div id="manuscript">
+      <p class="kicker">Manuscript under review</p>
+      <h1>야간 영상 기반 보행자 검출을 위한 저조도 영상강화 기법 비교</h1>
+      <p class="title-en">Comparison of Low-Light Enhancement Methods for Night-Time Pedestrian Detection</p>
+      <div class="meta">
+        <span>예시_야간보행자검출_원고.pdf</span><span>10쪽</span><span>참고문헌 8건</span>
+        <span>검토 2026-11-04 10:50</span><span>분석 18.4초</span>
+        <span>Keywords: Low-Light Enhancement, Pedestrian Detection, Night Vision, Image Fusion</span>
+      </div></div>
+      <div class="ms-tools">
+        <details class="pop" id="abstractPop"><summary>초록</summary><div class="pop-body" id="abstractBody"><p style="margin:0"><span class="abs-label">Abstract</span>This study compares low-light image enhancement methods for night-time pedestrian detection. We evaluate four enhancement techniques with two detectors on a newly collected urban night dataset and show that enhancement improves recall in dark scenes.</p></div></details>
+        <details class="pop" id="extractInfo"><summary>추출 정보</summary><div class="pop-body" id="extractBody"><dl class="kv">
+      <dt>키워드</dt><dd>Low-Light Enhancement, Pedestrian Detection, Night Vision, Image Fusion</dd>
+      <dt>참고문헌</dt><dd>8건 추출 (1. 번호형)</dd>
+    </dl>
+    <details><summary>참고문헌 원문 블록 보기 (추출 개수가 맞는지 확인용)</summary><pre class="raw">1. Doe, J. and Roe, A., 2018, Quantum lattice embeddings for hyperbolic sentiment calibration, Journal of Imaginary Systems, Vol. 12, No. 3, pp. 101-114.
+4. Kim, A., Park, S. and Lee, H., 2019, Adaptive fusion for low-light pedestrian detection, Sensors, Vol. 19, No. 8, pp. 1-15.
+7. Smith, D. G., 2004, Distinctive image features for night scenes, International Journal of Vision, Vol. 60, No. 2, pp. 91-110.
+2. Choi, H. and Yoon, J., 2023, Image enhancement networks: a survey, Pattern Recognition Letters, Vol. 170, pp. 33-48.
+3. Lee, S. and Park, M., 2022, Robust keypoint matching in dark scenes, Computer Vision and Image Understanding, Vol. 215, 103320.
+5. Jung, K., Han, D. and Oh, S., 2024, Retinex-guided enhancement for night vision, IEEE Access, Vol. 12, pp. 4410-4422.
+6. Moon, Y., 2021, Thermal and visible image fusion for surveillance, Remote Sensing, Vol. 13, No. 9, 1802.
+8. Bae, J. and Song, E., 2020, Benchmarking feature matching in the dark, Proc. of the Asian Conference on Imaging, pp. 220-229.</pre></details></div></details>
+        <details class="pop"><summary>메모</summary><div class="pop-body"><textarea id="memo" rows="5" placeholder="자유롭게 적으세요. 입력하는 대로 저장됩니다."></textarea></div></details>
+      </div>
+    </article>
+
+    <div class="board">
+      <section class="panel" aria-labelledby="h-dup">
+        <h2 id="h-dup"><span class="num">I.</span>중복성 검토</h2>
+        <div class="panel-body" id="tab-dup">
+      <div class="verdict-box">
+        <svg class="gauge" viewBox="0 0 168 100" role="img" aria-label="유사도 46%">
+      <path d="M18 84 A66 66 0 0 1 150 84" fill="none" stroke="var(--rule)" stroke-width="10"></path>
+      <path d="M18 84 A66 66 0 0 1 75.7 18.5" fill="none" stroke="var(--bad)" stroke-width="10"></path>
+      <text x="84" y="80" text-anchor="middle" font-size="30" font-weight="600">46<tspan font-size="16">%</tspan></text></svg>
+        <div>
+          <p class="headline">전체 유사도 46% <span class="badge bad">주의</span></p>
+          <div class="scale warn" aria-hidden="true"><span class="fill" style="width:46%"></span><span class="th" style="left:40%"></span></div>
+          <div class="scale-labels" aria-hidden="true"><span>0%</span><span>기준 40%</span><span>100%</span></div>
+          <p>가장 비슷한 1편 기준 · 외부 초록 20편, 이전 투고 3편과 비교</p>
+          
+        </div>
+      </div>
+      <p class="section-note">외부 논문은 초록 단위로만 비교합니다 (TF-IDF 코사인 유사도).</p>
+      <h3>유사도 상위 5편</h3>
+      <ol class="biblio">
+      <li>
+        <div class="cite">
+          <span class="badge warn">이전 투고</span>
+          <span class="title">저조도 보행자 검출 성능 향상을 위한 영상 융합 연구</span> (검토일 2026-10-21)
+        </div>
+        <div class="metrics">
+          <span><span class="simbar"><span style="width:46%"></span></span>유사도 <b>46%</b></span>
+          
+          <span>겹치는 구절 2개</span>
+        </div>
+        <details><summary>겹치는 구절 보기</summary>
+          <ul class="phrases"><li>low-light image enhancement methods for night-time pedestrian detection</li><li>on a newly collected urban night dataset</li></ul>
+          <div class="excerpt">This study compares <mark>low-light image enhancement methods for night-time pedestrian detection.</mark> We evaluate four enhancement techniques with two detecto<mark>rs on a newly collected urban night da</mark>taset.</div></details>
+      </li>
+      <li>
+        <div class="cite">
+          <span class="badge plain">외부 논문</span>
+          <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Retinex-Guided Enhancement for Night Vision<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span> (2026)
+        </div>
+        <div class="metrics">
+          <span><span class="simbar"><span style="width:21%"></span></span>유사도 <b>21%</b></span>
+          
+          <span>겹치는 구절 0개</span>
+        </div>
+        
+      </li>
+      <li>
+        <div class="cite">
+          <span class="badge plain">외부 논문</span>
+          <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Multispectral Fusion under Low Light<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span> (2025)
+        </div>
+        <div class="metrics">
+          <span><span class="simbar"><span style="width:17%"></span></span>유사도 <b>17%</b></span>
+          
+          <span>겹치는 구절 0개</span>
+        </div>
+        
+      </li>
+      <li>
+        <div class="cite">
+          <span class="badge plain">외부 논문</span>
+          <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Benchmarking Feature Matching in the Dark<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span> (2025)
+        </div>
+        <div class="metrics">
+          <span><span class="simbar"><span style="width:14%"></span></span>유사도 <b>14%</b></span>
+          
+          <span>겹치는 구절 0개</span>
+        </div>
+        
+      </li>
+      <li>
+        <div class="cite">
+          <span class="badge warn">이전 투고</span>
+          <span class="title">열화상 기반 야간 감시 영상 분석</span> (검토일 2026-09-30)
+        </div>
+        <div class="metrics">
+          <span><span class="simbar"><span style="width:12%"></span></span>유사도 <b>12%</b></span>
+          
+          <span>겹치는 구절 0개</span>
+        </div>
+        
+      </li></ol></div>
+      </section>
+      <section class="panel" aria-labelledby="h-ref">
+        <h2 id="h-ref"><span class="num">II.</span>참고문헌 검증</h2>
+        <div class="panel-body" id="tab-ref">
+      <div class="stats">
+        <div class="stat"><div class="label">전체</div><div class="value">8</div></div>
+        <div class="stat ok"><div class="label">O 일치</div><div class="value">5</div></div>
+        <div class="stat bad"><div class="label">X 이상</div><div class="value">3</div></div>
+        
+      </div>
+      <p class="caption"><b>표 1.</b>참고문헌 검증 결과. X 항목을 위에 둡니다. "(경미)", "(참고)"는 사람이 판단할 정도의 작은 차이입니다.</p>
+      <table>
+        <thead><tr><th>판정</th><th>번호</th><th>원문 · 사유</th><th>DB에서 찾은 논문</th></tr></thead>
+        <tbody>
+      <tr class="X">
+        <td class="verdict" title="X"><svg class="ic" aria-hidden="true"><use href="#i-cross"></use></svg><span class="sr">X</span></td>
+        <td class="idx">1</td>
+        <td class="raw">Doe, J. and Roe, A., 2018, Quantum lattice embeddings for hyperbolic sentiment calibration, Journal of Imaginary Systems, Vol. 12, No. 3, pp. 101-114.<span class="reason">존재 확인 불가: CrossRef·OpenAlex에서 일치하는 논문을 찾지 못함</span></td>
+        <td class="found"><div class="sub">일치하지 않음 · 가장 가까운 후보</div><a href="https://doi.org/10.0000/example.1" target="_blank" rel="noopener" class="ext">Lattice Embeddings for Sentiment Analysis<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a><div class="sub">M. Ortega, L. Chen · 2017 · CrossRef</div></td>
+      </tr>
+      <tr class="X">
+        <td class="verdict" title="X"><svg class="ic" aria-hidden="true"><use href="#i-cross"></use></svg><span class="sr">X</span></td>
+        <td class="idx">4</td>
+        <td class="raw">Kim, A., Park, S. and Lee, H., 2019, Adaptive fusion for low-light pedestrian detection, Sensors, Vol. 19, No. 8, pp. 1-15.<span class="reason">연도 불일치 2019→2021</span></td>
+        <td class="found"><a href="https://doi.org/10.0000/example.4" target="_blank" rel="noopener" class="ext">Adaptive Fusion for Low-Light Pedestrian Detection<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a><div class="sub">Ara Kim, Sumin Park, Hyun Lee · 2021 · CrossRef</div></td>
+      </tr>
+      <tr class="X">
+        <td class="verdict" title="X"><svg class="ic" aria-hidden="true"><use href="#i-cross"></use></svg><span class="sr">X</span></td>
+        <td class="idx">7</td>
+        <td class="raw">Smith, D. G., 2004, Distinctive image features for night scenes, International Journal of Vision, Vol. 60, No. 2, pp. 91-110.<span class="reason">제1저자 불일치 smith→Lowe</span></td>
+        <td class="found"><a href="https://doi.org/10.0000/example.7" target="_blank" rel="noopener" class="ext">Distinctive Image Features for Night Scenes<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a><div class="sub">David Lowe · 2004 · CrossRef</div></td>
+      </tr>
+      <tr class="O">
+        <td class="verdict" title="O"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg><span class="sr">O</span></td>
+        <td class="idx">2</td>
+        <td class="raw">Choi, H. and Yoon, J., 2023, Image enhancement networks: a survey, Pattern Recognition Letters, Vol. 170, pp. 33-48.</td>
+        <td class="found"><a href="https://doi.org/10.0000/example.2" target="_blank" rel="noopener" class="ext">Image Enhancement Networks: A Survey<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a><div class="sub">Hana Choi, Jiwoo Yoon · 2023 · CrossRef</div></td>
+      </tr>
+      <tr class="O">
+        <td class="verdict" title="O"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg><span class="sr">O</span></td>
+        <td class="idx">3</td>
+        <td class="raw">Lee, S. and Park, M., 2022, Robust keypoint matching in dark scenes, Computer Vision and Image Understanding, Vol. 215, 103320.</td>
+        <td class="found"><a href="https://doi.org/10.0000/example.3" target="_blank" rel="noopener" class="ext">Robust Keypoint Matching in Dark Scenes<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a><div class="sub">Seo Lee, Min Park · 2022 · CrossRef</div></td>
+      </tr>
+      <tr class="O">
+        <td class="verdict" title="O"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg><span class="sr">O</span></td>
+        <td class="idx">5</td>
+        <td class="raw">Jung, K., Han, D. and Oh, S., 2024, Retinex-guided enhancement for night vision, IEEE Access, Vol. 12, pp. 4410-4422.</td>
+        <td class="found"><a href="https://doi.org/10.0000/example.5" target="_blank" rel="noopener" class="ext">Retinex-Guided Enhancement for Night Vision<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a><div class="sub">Kyu Jung, Dana Han, Sol Oh · 2024 · OpenAlex</div></td>
+      </tr>
+      <tr class="O">
+        <td class="verdict" title="O"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg><span class="sr">O</span></td>
+        <td class="idx">6</td>
+        <td class="raw">Moon, Y., 2021, Thermal and visible image fusion for surveillance, Remote Sensing, Vol. 13, No. 9, 1802.</td>
+        <td class="found"><a href="https://doi.org/10.0000/example.6" target="_blank" rel="noopener" class="ext">Thermal and Visible Image Fusion for Surveillance<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a><div class="sub">Yuna Moon · 2021 · CrossRef</div></td>
+      </tr>
+      <tr class="O">
+        <td class="verdict" title="O"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg><span class="sr">O</span></td>
+        <td class="idx">8</td>
+        <td class="raw">Bae, J. and Song, E., 2020, Benchmarking feature matching in the dark, Proc. of the Asian Conference on Imaging, pp. 220-229.</td>
+        <td class="found"><a href="https://doi.org/10.0000/example.8" target="_blank" rel="noopener" class="ext">Benchmarking Feature Matching in the Dark<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a><div class="sub">Jin Bae, Eun Song · 2020 · OpenAlex</div></td>
+      </tr></tbody>
+      </table></div>
+      </section>
+      <section class="panel" aria-labelledby="h-sim">
+        <h2 id="h-sim"><span class="num">III.</span>유사 주제 연구</h2>
+        <div class="panel-body" id="tab-sim">
+      <div class="toolbar">
+        <label>정렬 <select id="simSort"><option value="date" selected="">최신순</option><option value="sim">유사도순</option><option value="cite">인용순</option></select></label>
+        <label>기간 <select id="simPeriod"><option value="3">최근 3년</option><option value="5">최근 5년</option><option value="all" selected="">전체</option></select></label>
+        <span class="count">6/6편 · OpenAlex</span>
+      </div>
+      
+      <ol class="biblio">
+        <li>
+          <div class="cite">Kyu Jung, Dana Han, Sol Oh (2026). <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Retinex-Guided Enhancement for Night Vision<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span>. <span class="venue">Journal of Imaging Research</span>.</div>
+          <div class="metrics">
+            <span><span class="simbar"><span style="width:21%"></span></span>유사도 <b>21%</b></span>
+            <span>인용 <b>14</b></span>
+            <span>출판일 2026-03-14</span>
+          </div>
+          <details><summary>초록</summary><div class="excerpt">(예시 초록) This study investigates enhancement and detection under low-light conditions.</div></details>
+        </li>
+        <li>
+          <div class="cite">Rina Seo, Tae Kang (2025). <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Multispectral Fusion under Low Light<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span>. <span class="venue">Sensors</span>.</div>
+          <div class="metrics">
+            <span><span class="simbar"><span style="width:17%"></span></span>유사도 <b>17%</b></span>
+            <span>인용 <b>31</b></span>
+            <span>출판일 2025-11-02</span>
+          </div>
+          <details><summary>초록</summary><div class="excerpt">(예시 초록) This study investigates enhancement and detection under low-light conditions.</div></details>
+        </li>
+        <li>
+          <div class="cite">Jin Bae, Eun Song (2025). <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Benchmarking Feature Matching in the Dark<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span>. <span class="venue">Pattern Analysis Letters</span>.</div>
+          <div class="metrics">
+            <span><span class="simbar"><span style="width:14%"></span></span>유사도 <b>14%</b></span>
+            <span>인용 <b>9</b></span>
+            <span>출판일 2025-06-20</span>
+          </div>
+          <details><summary>초록</summary><div class="excerpt">(예시 초록) This study investigates enhancement and detection under low-light conditions.</div></details>
+        </li>
+        <li>
+          <div class="cite">Ho Lim, Yeji Shin (2024). <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Night-Time Pedestrian Detection with Thermal Cues<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span>. <span class="venue">Applied Vision</span>.</div>
+          <div class="metrics">
+            <span><span class="simbar"><span style="width:12%"></span></span>유사도 <b>12%</b></span>
+            <span>인용 <b>22</b></span>
+            <span>출판일 2024-09-11</span>
+          </div>
+          <details><summary>초록</summary><div class="excerpt">(예시 초록) This study investigates enhancement and detection under low-light conditions.</div></details>
+        </li>
+        <li>
+          <div class="cite">Mina Cho (2024). <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Low-Light Image Enhancement: A Review<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span>. <span class="venue">Imaging Reviews</span>.</div>
+          <div class="metrics">
+            <span><span class="simbar"><span style="width:11%"></span></span>유사도 <b>11%</b></span>
+            <span>인용 <b>57</b></span>
+            <span>출판일 2024-02-05</span>
+          </div>
+          <details><summary>초록</summary><div class="excerpt">(예시 초록) This study investigates enhancement and detection under low-light conditions.</div></details>
+        </li>
+        <li>
+          <div class="cite">Sung Ryu, Ara Kim (2023). <span class="title"><a href="https://openalex.org/" target="_blank" rel="noopener" class="ext">Lightweight Enhancement Networks for Edge Cameras<svg class="ic" aria-hidden="true"><use href="#i-link"></use></svg></a></span>. <span class="venue">Embedded Vision</span>.</div>
+          <div class="metrics">
+            <span><span class="simbar"><span style="width:9%"></span></span>유사도 <b>9%</b></span>
+            <span>인용 <b>8</b></span>
+            <span>출판일 2023-12-01</span>
+          </div>
+          <details><summary>초록</summary><div class="excerpt">(예시 초록) This study investigates enhancement and detection under low-light conditions.</div></details>
+        </li></ol></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="colophon">외부 조회: CrossRef, OpenAlex · 1차 걸러내기 용도이며 공식 표절 검사(iThenticate, KCI 문헌유사도 검사)를 대신하지 않습니다.</footer>
+</div>
+
+<dialog id="settingsDlg">
+  <form method="dialog">
+    <h3>설정</h3>
+    <label>중복성 "주의" 기준값 (%)<input type="number" id="setThreshold" min="1" max="100"></label>
+    <label>유사 논문 수<input type="number" id="setCount" min="10" max="50"></label>
+    <label>API 연락용 이메일 (선택)<input type="email" id="setMailto" placeholder="비워 두어도 동작합니다"></label>
+    <p class="footnote">이메일을 넣으면 CrossRef·OpenAlex 요청에 붙여 보냅니다. 두 곳 모두 이메일이 붙은 요청을 더 안정적인 서버로 처리하고, CrossRef는 동시 조회 수를 늘려 줍니다.</p>
+    <div class="dialog-actions"><button value="cancel" class="btn ghost">취소</button><button value="ok" class="btn primary" id="settingsSave">저장</button></div>
+  </form>
+</dialog>
+
+<dialog id="accountDlg">
+  <!-- 로그인 전 -->
+  <form id="loginForm" method="dialog">
+    <h3>Supabase 로그인</h3>
+    <p class="footnote">로그인하면 검토 이력과 설정을 Supabase에 저장해 다른 PC·브라우저에서도 볼 수 있습니다. 로그인하지 않으면 지금처럼 이 브라우저에만 저장됩니다.</p>
+    <label>이메일<input type="email" id="loginEmail" autocomplete="username" required=""></label>
+    <label>비밀번호<input type="password" id="loginPassword" autocomplete="current-password" required=""></label>
+    <p class="form-error" id="loginError" hidden=""></p>
+    <p class="footnote">계정은 Supabase 대시보드 → Authentication → Users → Add user 에서 만듭니다.</p>
+    <div class="dialog-actions"><button type="button" class="btn ghost" data-close="">닫기</button><button type="submit" class="btn primary" id="loginSubmit">로그인</button></div>
+  </form>
+  <!-- 로그인 후 -->
+  <div id="accountPanel" hidden="">
+    <h3>Supabase 계정</h3>
+    <p><b id="accountEmail"></b><br><span class="footnote">검토 이력과 설정이 Supabase에 저장되고 있습니다.</span></p>
+    <div class="migrate" id="migrateBox" hidden="">
+      <p class="footnote" id="migrateText"></p>
+      <button type="button" class="btn" id="migrateBtn">Supabase로 옮기기</button>
+    </div>
+    <div class="dialog-actions"><button type="button" class="btn ghost" id="logoutBtn">로그아웃</button><button type="button" class="btn primary" data-close="">닫기</button></div>
+  </div>
+</dialog>
+
+
+
+
+
+<!-- Supabase 주소·키: tools/make-config.ps1 이 .env.local 에서 만든다. 없으면 브라우저 저장만 쓴다 -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>

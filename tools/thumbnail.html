@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>RefCheck 썸네일 (1280×800)</title>
+<!-- 대표 썸네일 원본. tools/make-thumbnail.ps1 이 이 페이지를 1280×800 PNG(img/thumbnail.png)로 찍는다.
+     화면 속 논문 제목·저자·수치는 모두 예시용 가상 데이터. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700;900&family=Noto+Sans+KR:wght@400;500;600;700&display=block">
+<style>
+  :root {
+    --sky: #e6f2fb; --sky-2: #d3e8f8; --sheet: #ffffff; --sheet-2: #f4f9fd; --ink: #18232e; --ink-2: #3e4c5a; --muted: #6c7b8a;
+    --rule: #cfe0ee; --navy: #1f4e79; --navy-deep: #15385a; --ok: #2d6a4a; --ok-soft: #e3f3ea; --bad: #9b2335; --bad-soft: #fbe9ec; --warn: #8a5a12; --warn-soft: #fbf0db;
+    --serif: "Noto Serif KR", "Batang", serif; --sans: "Noto Sans KR", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1280px; height: 800px; overflow: hidden; }
+  body { font-family: var(--serif); color: var(--ink); word-break: keep-all;
+    background:
+      radial-gradient(900px 600px at 105% -10%, #cfe6fa 0%, transparent 60%),
+      radial-gradient(700px 500px at -10% 110%, #d9ecfb 0%, transparent 60%),
+      var(--sky); position: relative; }
+  /* 은은한 원고지 격자 */
+  body::before { content: ""; position: absolute; inset: 0; background-image:
+      linear-gradient(rgba(31,78,121,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(31,78,121,.05) 1px, transparent 1px);
+    background-size: 32px 32px; mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,.35) 55%, transparent 100%); }
+
+  .wrap { position: relative; display: grid; grid-template-columns: 440px 1fr; height: 100%; padding: 64px 48px 56px 72px; gap: 32px; }
+
+  /* ---------- 왼쪽: 제호 ---------- */
+  .left { display: flex; flex-direction: column; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand img { width: 56px; height: 56px; }
+  .brand .name { font-size: 30px; font-weight: 700; letter-spacing: .04em; font-variant: small-caps; }
+  .kicker { margin-top: 54px; font: 700 14px var(--sans); letter-spacing: .24em; color: var(--navy); text-transform: uppercase; }
+  h1 { margin-top: 14px; font-size: 76px; line-height: 1.12; font-weight: 900; letter-spacing: -0.03em; }
+  h1 .accent { color: var(--navy); position: relative; }
+  h1 .accent::after { content: ""; position: absolute; left: 0; right: 0; bottom: 6px; height: 14px; background: #fde9a6; z-index: -1; border-radius: 2px; }
+  .lede { margin-top: 22px; font-size: 21px; line-height: 1.6; color: var(--ink-2); }
+  .features { margin-top: 34px; display: flex; flex-direction: column; gap: 14px; }
+  .feat { display: grid; grid-template-columns: 54px 1fr; align-items: center; }
+  .feat .num { font: 600 20px var(--serif); color: var(--navy); }
+  .feat b { font: 700 19px var(--sans); color: var(--ink); }
+  .feat span { font: 400 16px var(--sans); color: var(--muted); margin-left: 10px; }
+  .foot { margin-top: auto; display: flex; gap: 10px; align-items: center; font: 500 14px var(--sans); color: var(--muted); }
+  .chip { border: 1px solid var(--rule); background: rgba(255,255,255,.75); border-radius: 999px; padding: 6px 14px; color: var(--ink-2); }
+
+  /* ---------- 오른쪽: 앱 화면 모형 ---------- */
+  .stage { position: relative; }
+  .win { position: absolute; background: var(--sheet); border: 1px solid var(--rule); border-radius: 16px; box-shadow: 0 30px 60px -20px rgba(21,56,90,.35), 0 8px 18px rgba(21,56,90,.08); overflow: hidden; }
+  .win .bar { height: 38px; display: flex; align-items: center; gap: 7px; padding: 0 16px; border-bottom: 1px solid var(--rule); background: var(--sheet-2); }
+  .win .bar i { width: 11px; height: 11px; border-radius: 50%; background: #d5e2ee; }
+  .win .bar .ttl { margin-left: 10px; font: 600 13px var(--sans); color: var(--muted); }
+  .win h3 { font: 600 17px var(--serif); padding: 14px 20px 10px; border-bottom: 1px solid var(--rule); display: flex; gap: 8px; align-items: baseline; }
+  .win h3 .n { color: var(--navy); font-weight: 500; }
+
+  /* 메인 창: 참고문헌 검증 */
+  .main { left: 0; top: 56px; width: 440px; }
+  .main table { margin-bottom: 18px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 16px 20px 12px; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .stats div { padding: 10px 14px; background: var(--sheet-2); border-right: 1px solid var(--rule); }
+  .stats div:last-child { border-right: 0; }
+  .stats small { font: 700 11px var(--sans); letter-spacing: .1em; color: var(--muted); }
+  .stats strong { display: block; font: 600 32px/1.2 var(--serif); }
+  .stats .o strong { color: var(--ok); } .stats .x strong { color: var(--bad); }
+  table { width: calc(100% - 40px); margin: 0 20px; border-collapse: collapse; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+  th { font: 600 11.5px var(--sans); color: var(--ink-2); text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--ink); }
+  td { padding: 9px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; font-size: 13px; line-height: 1.45; }
+  tr:last-child td { border-bottom: 0; }
+  tr.x td { background: var(--bad-soft); }
+  td.v { width: 34px; text-align: center; }
+  td.v svg { width: 19px; height: 19px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -4px; }
+  tr.x td.v svg { stroke: var(--bad); } tr.o td.v svg { stroke: var(--ok); }
+  td .why { display: block; font: 600 11.5px var(--sans); color: var(--bad); margin-top: 2px; }
+  td.f { color: var(--navy); width: 40%; text-decoration: underline; text-decoration-color: rgba(31,78,121,.35); text-underline-offset: 3px; }
+
+  /* 중복성 카드 */
+  .dup { right: 0; top: 0; width: 268px; height: 232px; }
+  .dup .body { display: flex; flex-direction: column; align-items: center; padding: 14px 18px; }
+  .dup svg.g { width: 190px; }
+  .dup .lab { font: 600 13px var(--sans); color: var(--ink-2); margin-top: 2px; display: flex; gap: 8px; align-items: center; }
+  .badge { font: 700 11px/1.6 var(--sans); padding: 0 8px; border: 1px solid currentColor; border-radius: 5px; }
+  .badge.bad { color: var(--bad); background: var(--bad-soft); }
+
+  /* 유사 연구 카드 */
+  .sim { right: 0; top: 262px; width: 290px; }
+  .sim ol { padding-bottom: 8px; }
+  .sim ol { list-style: none; padding: 6px 18px; }
+  .sim li { padding: 10px 0 10px 30px; position: relative; border-bottom: 1px solid var(--rule); font-size: 13.5px; line-height: 1.45; }
+  .sim li:last-child { border-bottom: 0; }
+  .sim li::before { content: attr(data-n); position: absolute; left: 0; top: 10px; color: var(--muted); font-size: 12.5px; }
+  .sim li b { font-weight: 600; color: var(--navy); }
+  .sim li em { display: block; font: 500 11.5px var(--sans); font-style: normal; color: var(--muted); margin-top: 3px; }
+  .bar2 { display: inline-block; width: 44px; height: 4px; background: var(--rule); border-radius: 2px; vertical-align: middle; margin-right: 5px; position: relative; }
+  .bar2 span { position: absolute; inset: 0 auto 0 0; background: var(--navy); border-radius: 2px; }
+
+  /* PDF 원고 종이 (뒤쪽 장식) */
+  .paper { position: absolute; left: -44px; top: 470px; width: 150px; height: 196px; background: #fff; border: 1px solid var(--rule); border-radius: 6px; transform: rotate(-9deg);
+    box-shadow: 0 14px 30px -12px rgba(21,56,90,.35); padding: 18px 16px; }
+  .paper .t { height: 9px; width: 80%; background: var(--ink); border-radius: 2px; opacity: .8; }
+  .paper .l { height: 5px; background: #cfdbe6; border-radius: 2px; margin-top: 9px; }
+  .paper .pdf { position: absolute; right: 12px; bottom: 12px; font: 800 13px var(--sans); color: #fff; background: var(--bad); padding: 3px 7px; border-radius: 4px; letter-spacing: .05em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="left">
+    <div class="brand"><img src="../img/logo.svg" alt=""><span class="name">RefCheck</span></div>
+    <p class="kicker">Manuscript Review Assistant</p>
+    <h1>연구결과<br><span class="accent">검토</span> 도우미</h1>
+    <p class="lede">논문 PDF 한 편이면 참고문헌 검증,<br>중복성, 유사 연구가 한 화면에.</p>
+    <div class="features">
+      <div class="feat"><span class="num">I.</span><div><b>중복성 검토</b><span>기존 연구·이전 투고와 유사도</span></div></div>
+      <div class="feat"><span class="num">II.</span><div><b>참고문헌 O/X</b><span>CrossRef·OpenAlex 대조</span></div></div>
+      <div class="feat"><span class="num">III.</span><div><b>유사 주제 연구</b><span>최신 논문 20편</span></div></div>
+    </div>
+    <div class="foot"><span class="chip">PDF 업로드</span><span class="chip">Excel 내보내기</span><span class="chip">Supabase 저장</span></div>
+  </section>
+
+  <section class="stage">
+    <div class="win main">
+      <div class="bar"><i></i><i></i><i></i><span class="ttl">II. 참고문헌 검증</span></div>
+      <div class="stats">
+        <div><small>전체</small><strong>42</strong></div>
+        <div class="o"><small>O 일치</small><strong>38</strong></div>
+        <div class="x"><small>X 이상</small><strong>4</strong></div>
+      </div>
+      <table>
+        <thead><tr><th>판정</th><th>원문 · 사유</th></tr></thead>
+        <tbody>
+          <tr class="x"><td class="v"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9 9l6 6M15 9l-6 6"/></svg></td>
+            <td>J. Doe, "Quantum lattice embeddings for sentiment calibration," 2018.<span class="why">존재 확인 불가</span></td></tr>
+          <tr class="x"><td class="v"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9 9l6 6M15 9l-6 6"/></svg></td>
+            <td>A. Kim et al., "Adaptive fusion for low-light detection," 2019.<span class="why">연도 불일치 2019→2021</span></td></tr>
+          <tr class="o"><td class="v"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.2l2.5 2.5 4.9-5.2"/></svg></td>
+            <td>S. Lee and M. Park, "Robust keypoint matching in dark scenes," 2022.</td></tr>
+          <tr class="o"><td class="v"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.2l2.5 2.5 4.9-5.2"/></svg></td>
+            <td>H. Choi, "Image enhancement networks: a survey," 2023.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="win dup">
+      <h3><span class="n">I.</span>중복성 검토</h3>
+      <div class="body">
+        <svg class="g" viewBox="0 0 168 100">
+          <path d="M18 84 A66 66 0 0 1 150 84" fill="none" stroke="#cfe0ee" stroke-width="12" stroke-linecap="round"/>
+          <path d="M18 84 A66 66 0 0 1 108.3 22.6" fill="none" stroke="#9b2335" stroke-width="12" stroke-linecap="round"/>
+          <text x="84" y="80" text-anchor="middle" font-family="Noto Serif KR" font-size="34" font-weight="700" fill="#18232e">62<tspan font-size="17">%</tspan></text>
+        </svg>
+        <div class="lab">전체 유사도 <span class="badge bad">주의</span></div>
+      </div>
+    </div>
+
+    <div class="win sim">
+      <h3><span class="n">III.</span>유사 주제 연구</h3>
+      <ol>
+        <li data-n="[1]"><b>Retinex-Guided Enhancement for Night Vision</b><em><span class="bar2"><span style="width:62%"></span></span>2026 · 인용 14</em></li>
+        <li data-n="[2]"><b>Multispectral Fusion under Low Light</b><em><span class="bar2"><span style="width:48%"></span></span>2025 · 인용 31</em></li>
+        <li data-n="[3]"><b>Benchmarking Feature Matching in the Dark</b><em><span class="bar2"><span style="width:40%"></span></span>2025 · 인용 9</em></li>
+      </ol>
+    </div>
+
+    <div class="paper"><div class="t"></div><div class="l"></div><div class="l"></div><div class="l" style="width:70%"></div><div class="l"></div><div class="l"></div><div class="l" style="width:55%"></div><div class="l"></div><span class="pdf">PDF</span></div>
+  </section>
+</div>
+</body>
+</html>
