@@ -23,12 +23,21 @@ RC.exporter = (function () {
     const sim = head.concat([[], ['제목', '저자', '연도', '저널·학회', '인용 수', '유사도(%)', '링크']]);
     (opts.similarRows || review.similar).forEach(s => sim.push([s.title, s.authors, s.year, s.venue, s.citations, pct(s.similarity), s.url]));
 
+    // 맨 앞 "요약" 시트: 요약 보고서와 같은 종합 판단·수치·의견
+    const S = RC.report.summarize(review, opts.threshold);
+    const sum = head.concat([[], ['종합 판단', S.verdict.text],
+      ['I. 중복성', S.dup.pct + '% (' + (S.dup.warn ? '주의' : '기준 미만') + ', 기준 ' + opts.threshold + '%)'],
+      ['II. 참고문헌', '전체 ' + S.refs.total + '건 · O ' + S.refs.o + ' · X ' + S.refs.x + (S.refs.q ? ' · 확인 못 함 ' + S.refs.q : '')],
+      ['III. 유사 연구', S.sim.total + '편 (최근 3년 ' + S.sim.recent + '편)'], [], ['종합 의견 (자동 생성)']])
+      .concat(S.lines.map((l, i) => [i + 1, l]));
+
     const wb = XLSX.utils.book_new();
     const add = (rows, name, widths) => {
       const ws = XLSX.utils.aoa_to_sheet(rows);
       ws['!cols'] = widths.map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, name);
     };
+    add(sum, '요약', [16, 120]);
     add(dup, '중복성', [14, 16, 60, 12, 10, 40, 60]);
     add(ref, 'Reference', [10, 6, 50, 80, 60, 12, 40]);
     add(sim, '유사연구', [70, 40, 8, 40, 10, 10, 40]);

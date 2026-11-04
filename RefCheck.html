@@ -26,6 +26,7 @@
     <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h14v11l-5 5H5z"/><path d="M14 20v-5h5M8.5 9h7M8.5 12.5h4"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.4"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-report" viewBox="0 0 24 24"><path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v4h4"/><path d="M8.5 12h7M8.5 15h7M8.5 18h4"/><path d="M8.5 9h3"/></symbol>
     <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c1.2-3.4 3.8-5 7-5s5.8 1.6 7 5"/></symbol>
     <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7 9.5a4.5 4.5 0 0 0 0 9z"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.2l2.5 2.5 4.9-5.2"/></symbol>
@@ -44,6 +45,7 @@
       <span class="select-wrap" title="검토 이력"><svg class="ic"><use href="#i-history"/></svg><select id="historySelect" aria-label="검토 이력"><option value="">검토 이력</option></select></span>
       <span class="tool-sep" aria-hidden="true"></span>
       <label class="btn icon primary" data-tip="원고 PDF 업로드" tabindex="0"><svg class="ic"><use href="#i-pdf"/></svg><span class="sr">원고 PDF 업로드</span><input type="file" id="fileInput" accept="application/pdf" hidden></label>
+      <button id="reportBtn" class="btn icon" data-tip="요약 보고서 (인쇄·PDF·Markdown)" disabled><svg class="ic"><use href="#i-report"/></svg><span class="sr">요약 보고서</span></button>
       <button id="exportBtn" class="btn icon" data-tip="Excel 내보내기" disabled><svg class="ic"><use href="#i-table"/></svg><span class="sr">Excel 내보내기</span></button>
       <button id="backupBtn" class="btn icon ghost" data-tip="이력 백업 (JSON 저장)"><svg class="ic"><use href="#i-archive"/></svg><span class="sr">이력 백업</span></button>
       <label class="btn icon ghost" data-tip="백업에서 복원" tabindex="0"><svg class="ic"><use href="#i-restore"/></svg><span class="sr">백업에서 복원</span><input type="file" id="restoreInput" accept="application/json,.json" hidden></label>
@@ -156,6 +158,7 @@
 <script src="js/ref-verify.js"></script>
 <script src="js/similar.js"></script>
 <script src="js/duplicate.js"></script>
+<script src="js/report.js"></script>
 <script src="js/export.js"></script>
 <script src="js/app.js"></script>
 </body>

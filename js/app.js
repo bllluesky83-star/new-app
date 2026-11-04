@@ -54,6 +54,7 @@
       memoTimer = setTimeout(() => RC.store.putReview(current).catch(e => showError('메모 저장 실패: ' + e.message)), 400);
     });
     $('exportBtn').addEventListener('click', () => current && RC.exporter.toXlsx(current, { threshold: settings.threshold, similarRows: filteredSimilar(current) }));
+    $('reportBtn').addEventListener('click', () => current && RC.report.open(current, settings.threshold));
     $('backupBtn').addEventListener('click', backup);
     $('restoreInput').addEventListener('change', restore);
     $('settingsBtn').addEventListener('click', openSettings);
@@ -64,6 +65,7 @@
   async function analyze(file) {
     hideError();
     $('exportBtn').disabled = true;
+    $('reportBtn').disabled = true;
     const started = performance.now();
     try {
       progress('PDF 읽는 중…', 5);
@@ -125,6 +127,7 @@
     $('empty').hidden = true;
     $('result').hidden = false;
     $('exportBtn').disabled = false;
+    $('reportBtn').disabled = false;
     $('memo').value = r.memo || '';
     $('historySelect').value = String(r.id);
     renderManuscript(r);
@@ -374,6 +377,7 @@
     $('result').hidden = true;
     $('empty').hidden = false;
     $('exportBtn').disabled = true;
+    $('reportBtn').disabled = true;
     hideError();
     try {
       settings = await RC.store.getSettings();
